@@ -7,6 +7,7 @@ mod snake;
 use snake::Game;
 use std::ptr::null;
 use std::sync::{Arc, Mutex};
+use std::thread;
 use std::time::Duration;
 use tauri::{window, AppHandle, Event, Manager, State};
 use tokio::time::sleep;
@@ -48,39 +49,30 @@ fn dom_loaded() {
 async fn start_game(window: tauri::Window) -> Game {
 	println!("starting game");
 	let game: Game = Game::new(30, 30);
-	let mut mutex_game = Mutex::new(game.clone());
-
+	let original_arc_mutex_game = Arc::new(Mutex::new(game.clone()));
+	let cloned_game = original_arc_mutex_game.clone();
+	
 	tauri::async_runtime::spawn(async move {
-		
+		// let up = window.listen("direction_up", |_event| {
+		// 	let mut game = cloned_game.lock().unwrap();
+		// 	game.change_direction(Direction::Up)
+		// });
+		// let down = window.listen("direction_down", |_event| {
+		// 	let mut game = cloned_game.lock().unwrap();
+		// 	game.change_direction(Direction::Down)
+		// });
+
 		let mut game_lost = false;
 		while !game_lost {
-			let up = window.listen("direction_up", |_event| {
-				let mut game = mutex_game.lock().unwrap();
-				game.change_direction(Direction::Up)
-			});
-			let down = window.listen("direction_down", |_event| {
-				let mut game = mutex_game.lock().unwrap();
-				game.change_direction(Direction::Down)
-			});
-			let right = window.listen("direction_right", |_event| {
-				let mut game = mutex_game.lock().unwrap();
-				game.change_direction(Direction::Right)
-			});
-			let left = window.listen("direction_left", |_event| {
-				let mut game = mutex_game.lock().unwrap();
-				game.change_direction(Direction::Left)
-			});
 			sleep(Duration::from_millis(100)).await;
-			window.unlisten(up);
-			window.unlisten(down);
-			window.unlisten(left);
-			window.unlisten(right);
-			let mut game = mutex_game.lock().unwrap();
+			let mut game = cloned_game.lock().unwrap();
 			game.tick();
-			// println!("sending backend-ping");
 			window.emit("tick", game.clone()).unwrap();
+			if game.lost { game_lost = true; }
 		}
 
+		// window.unlisten(up);
+		// window.unlisten(down);
 		window.emit("lost", "You lost the game!").unwrap();
 	});
 	game.clone()
