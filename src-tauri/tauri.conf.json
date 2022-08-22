@@ -57,7 +57,7 @@
       {
         "fullscreen": false,
         "height": 800,
-        "width": 576,
+        "width": 800,
         "alwaysOnTop": true,        
         "resizable": true,
         "title": "Tauri App"        

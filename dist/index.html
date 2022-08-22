@@ -1,11 +1,27 @@
 <!DOCTYPE html>
 <html>
-  <link rel="stylesheet" href="css/main.css">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/snake.css">
   <script src="js/app-bundle.js"></script>
   <body>
-    <div class="hello">Click for Hello</div>
+    <!-- <div class="hello">Click for Hello</div>
     <counter-button>ADD</counter-button>
-    <counter-result>.</counter-result>
+    <counter-result>.</counter-result> -->
     <backend-ping class="server"></backend-ping>
+    <div id="snake">
+      <div id="game-grid">
+
+      </div>
+      <div id="start-modal" class="modal">
+        <div id="start-button" class="modal-content button">
+          Start game!
+        </div>
+      </div>
+      <div id="game-over-modal" class="modal">
+        <div class="modal-content">
+          Game over!
+        </div>
+      </div>
+    </div>
   </body>
 </html>

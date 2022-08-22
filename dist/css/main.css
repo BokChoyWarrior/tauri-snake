@@ -15,12 +15,10 @@
 html,
 body {
   height: 100%;
-  font-size: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
   /* make sure the canvas is the browser window */
 }
 
@@ -30,22 +28,11 @@ html {
 }
 
 /* #endregion --- Base */
-
-div.hello {
-  cursor: pointer;
-  user-select: none;
-  -webkit-user-select: none;
-  padding: .5rem .5rem;
-  border: solid 1px #dedede;
-  color: #888;
-  font-size: 1.rem;
-}
-
 counter-button {
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
-  border: solid 1px hsl(210, 78%, 37%);
+  border: solid 1px hsl(0, 82%, 45%);
   border-radius: 5px;
   background: hsl(210, 90%, 76%);
   padding: .875rem 3rem;
@@ -69,7 +56,7 @@ backend-ping {
   border-radius: 3rem;
   width: 1rem;
   height: 1rem;
-  background-color: hsl(217, 100%, 50%);
+  background-color: hsl(0, 100%, 55%);
   transition: scale .125s;
 }
 
