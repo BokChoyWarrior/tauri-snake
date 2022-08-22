@@ -27,14 +27,35 @@ document.addEventListener("DOMContentLoaded", async function () {
   const start_modal = $("#start-modal") as HTMLElement;
 
   const game_over_modal = $("#game-over-modal") as HTMLElement;
-
+  const play_again_button = $("#play-again-button") as HTMLElement;
+  
   const game_grid = $("#game-grid") as HTMLElement;
 
-  game_over_modal.style.setProperty("display", "none");
-
-  start_button.addEventListener("click", async function startGameListener() {
+  const startGameListener = async function (modal: HTMLElement) {
     console.log("Start game clicked");
-    start_modal.style.setProperty("display", "none");
+    modal.classList.add("hidden");
+    await start_game(game_grid);
+  };
+
+  start_button.addEventListener("click", () => startGameListener(start_modal));
+  play_again_button.addEventListener("click", () => startGameListener(game_over_modal));
+
+  listen("tick", async function tick_update(evt: TauriEvent<any>) {
+    console.log("tick");
+    draw_game(evt.payload);
+  });
+
+  listen("lost", async function lose_game(evt: TauriEvent<any>) {
+    console.log("lost");
+    clear_board();
+    game_over_modal.classList.remove("hidden");
+  });
+
+  function clear_board() {
+    game_grid.innerHTML = "";
+  }
+
+  async function start_game(game_grid: HTMLElement) {
     const game: any = await invoke("start_game");
     console.log(game);
     game_grid.style.setProperty(
@@ -42,13 +63,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       `repeat(${game.height}, auto) / repeat(${game.width}, auto)`
     );
     draw_game(game);
-  });
-
-  listen("tick", async function tick_update(evt: TauriEvent<any>) {
-    console.log("tick");
-    draw_game(evt.payload)
-
-  });
+  }
 
   function draw_game(game: any) {
     game_grid.innerHTML = "";

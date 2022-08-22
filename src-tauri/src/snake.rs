@@ -52,7 +52,7 @@ impl Snake {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Copy)]
 pub enum Direction {
     Up,
     Left,
@@ -95,7 +95,7 @@ impl Game {
             | (Direction::Down, Direction::Right)
             | (Direction::Right, Direction::Up)
             | (Direction::Right, Direction::Down) => {self.snake.direction = dir}
-            (_, _) => {self.snake.direction = self.snake.direction}
+            (_, _) => {self.snake.direction = self.snake.direction;}
         }
     }
 
