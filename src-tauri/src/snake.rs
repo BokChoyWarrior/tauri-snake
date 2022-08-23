@@ -3,7 +3,7 @@ use std::ops::Add;
 use rand::{self, Rng};
 use serde::{Serialize, Deserialize};
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct Game {
     pub width: usize,
     pub height: usize,
@@ -13,7 +13,7 @@ pub struct Game {
     pub lost: bool,
 }
 
-#[derive(PartialEq, Eq, Copy, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Copy, Clone, Serialize, Deserialize, Default)]
 pub struct Position {
     x: usize,
     y: usize,
@@ -30,10 +30,10 @@ impl Add for Position {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct Snake {
     body: Vec<Position>,
-    direction: Direction,
+    pub direction: Direction,
 }
 
 impl Snake {
@@ -52,11 +52,12 @@ impl Snake {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy)]
+#[derive(Serialize, Deserialize, Clone, Copy, Default)]
 pub enum Direction {
     Up,
     Left,
     Down,
+    #[default]
     Right,
 }
 
@@ -103,9 +104,9 @@ impl Game {
 
         let (x, y) = (self.snake.body[0].x, self.snake.body[0].y);
         let new_head = match &self.snake.direction {
-            Direction::Up => Position { x, y: y+1 },
+            Direction::Up => Position { x, y: y-1 },
             Direction::Left => Position { x: x-1, y },
-            Direction::Down => Position { x, y: y-1 },
+            Direction::Down => Position { x, y: y+1 },
             Direction::Right => Position { x: x+1, y },
         };
         self.snake.body.insert(0, new_head);

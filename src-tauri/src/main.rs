@@ -4,9 +4,10 @@
 )]
 mod snake;
 
-use snake::Game;
+use snake::{Game, Position};
 use std::ptr::null;
-use std::sync::{Arc, Mutex};
+use std::sync::mpsc::Receiver;
+use std::sync::{Arc, Mutex, mpsc};
 use std::thread;
 use std::time::Duration;
 use tauri::{window, AppHandle, Event, Manager, State};
@@ -16,6 +17,9 @@ use crate::snake::Direction;
 
 #[derive(Default)]
 struct Counter(Arc<Mutex<i32>>);
+
+#[derive(Default)]
+struct SafeGame(Arc<Mutex<Game>>);
 
 fn main() {
 	tauri::Builder::default()
@@ -28,14 +32,19 @@ fn main() {
 					app_handle.emit_all("backend-ping", "ping").unwrap();
 				}
 			});
+			#[cfg(debug_assertions)] // only include this code on debug builds
+			{
+				let window = app.get_window("main").unwrap();
+				window.open_devtools();
+			}
 			Ok(())
 		})
 		.on_page_load(|window, _| {
 			let window_ = window.clone();
 			println!("page loaded");
 		})
-		.manage(Counter::default())
-		.invoke_handler(tauri::generate_handler![dom_loaded, start_game])
+		.manage(SafeGame::default())
+		.invoke_handler(tauri::generate_handler![dom_loaded, start_game, tick, change_dir])
 		.run(tauri::generate_context!())
 		.expect("error while running tauri application");
 }
@@ -46,36 +55,37 @@ fn dom_loaded() {
 }
 
 #[tauri::command]
-async fn start_game(window: tauri::Window) -> Game {
+async fn start_game(window: tauri::Window, safe_game: State<'_, SafeGame>) -> Result<Game, ()> {
 	println!("starting game");
-	let game: Game = Game::new(30, 30);
-	let original_arc_mutex_game = Arc::new(Mutex::new(game.clone()));
-	let cloned_game = original_arc_mutex_game.clone();
-	
-	tauri::async_runtime::spawn(async move {
-		// let up = window.listen("direction_up", |_event| {
-		// 	let mut game = cloned_game.lock().unwrap();
-		// 	game.change_direction(Direction::Up)
-		// });
-		// let down = window.listen("direction_down", |_event| {
-		// 	let mut game = cloned_game.lock().unwrap();
-		// 	game.change_direction(Direction::Down)
-		// });
+	let mut game_mut = safe_game.0.lock().unwrap();
+	*game_mut = Game::new(30, 30);
+	Ok(game_mut.clone())
+}
 
-		let mut game_lost = false;
-		while !game_lost {
-			sleep(Duration::from_millis(100)).await;
-			let mut game = cloned_game.lock().unwrap();
-			game.tick();
-			window.emit("tick", game.clone()).unwrap();
-			if game.lost { game_lost = true; }
-		}
+#[tauri::command]
+async fn tick(window: tauri::Window, safe_game: State<'_, SafeGame>) -> Result<Game, ()> {
+	let mut game_mut = safe_game.0.lock().unwrap();
+	game_mut.tick();
+	if game_mut.lost {
+		window.emit("lost", "lost game").unwrap();
+		Err(())
+	} else {
+		Ok(game_mut.clone())
+	}
+}
 
-		// window.unlisten(up);
-		// window.unlisten(down);
-		window.emit("lost", "You lost the game!").unwrap();
-	});
-	game.clone()
+#[tauri::command]
+fn change_dir(direction: String, game: State<'_, SafeGame>) {
+	let mut game_mut = game.0.lock().unwrap();
+
+	let dir: Direction = match direction.as_str() {
+		"up" => Direction::Up,
+		"down" => Direction::Down,
+		"left" => Direction::Left,
+		"right" => Direction::Right,
+		_ => game_mut.snake.direction
+	};
+	game_mut.change_direction(dir);
 }
 
 #[tauri::command]

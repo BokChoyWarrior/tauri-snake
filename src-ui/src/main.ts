@@ -35,10 +35,17 @@ document.addEventListener("DOMContentLoaded", async function () {
     console.log("Start game clicked");
     modal.classList.add("hidden");
     await start_game(game_grid);
+
+    start_game_loop();
   };
 
   start_button.addEventListener("click", () => startGameListener(start_modal));
   play_again_button.addEventListener("click", () => startGameListener(game_over_modal));
+
+  document.addEventListener("keydown", async (event: KeyboardEvent) => {
+    let direction = event.key.substring(5).toLowerCase();
+    await invoke(`change_dir`, {direction})
+  })
 
   listen("tick", async function tick_update(evt: TauriEvent<any>) {
     console.log("tick");
@@ -63,6 +70,16 @@ document.addEventListener("DOMContentLoaded", async function () {
       `repeat(${game.height}, auto) / repeat(${game.width}, auto)`
     );
     draw_game(game);
+  }
+  
+  async function start_game_loop() {
+    let lost = false;
+    while (!lost) {
+      const game: any = await invoke("tick");
+      draw_game(game);
+      lost = game.lost;
+      await new Promise(r => setTimeout(r, 100));
+    } 
   }
 
   function draw_game(game: any) {
@@ -114,3 +131,4 @@ document.addEventListener("DOMContentLoaded", async function () {
   //   }, 1000);
   // });
 });
+
