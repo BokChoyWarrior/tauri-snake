@@ -44,7 +44,7 @@ fn main() {
 			println!("page loaded");
 		})
 		.manage(SafeGame::default())
-		.invoke_handler(tauri::generate_handler![dom_loaded, start_game, tick, change_dir])
+		.invoke_handler(tauri::generate_handler![dom_loaded, start_game, tick, queue_change_dir])
 		.run(tauri::generate_context!())
 		.expect("error while running tauri application");
 }
@@ -75,7 +75,7 @@ async fn tick(window: tauri::Window, safe_game: State<'_, SafeGame>) -> Result<G
 }
 
 #[tauri::command]
-fn change_dir(direction: String, game: State<'_, SafeGame>) {
+fn queue_change_dir(direction: String, game: State<'_, SafeGame>) {
 	let mut game_mut = game.0.lock().unwrap();
 
 	let dir: Direction = match direction.as_str() {
@@ -85,7 +85,7 @@ fn change_dir(direction: String, game: State<'_, SafeGame>) {
 		"right" => Direction::Right,
 		_ => game_mut.snake.direction
 	};
-	game_mut.change_direction(dir);
+	game_mut.queue_change_direction(dir);
 }
 
 #[tauri::command]

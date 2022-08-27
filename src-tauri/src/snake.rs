@@ -34,6 +34,8 @@ impl Add for Position {
 pub struct Snake {
     body: Vec<Position>,
     pub direction: Direction,
+    queued_direction: Direction,
+    did_eat: bool,
 }
 
 impl Snake {
@@ -48,6 +50,48 @@ impl Snake {
         Self {
             body,
             direction: Direction::Right,
+            queued_direction: Direction::Right,
+            did_eat: false,
+        }
+    }
+    fn change_direction(&mut self) {
+        self.direction = self.queued_direction;
+    }
+
+    pub fn queue_change_direction(&mut self, dir: Direction) {
+        match (&self.direction, dir) {
+            (Direction::Up, Direction::Left)  
+            | (Direction::Up, Direction::Right) 
+            | (Direction::Left, Direction::Up)
+            | (Direction::Left, Direction::Down)
+            | (Direction::Down, Direction::Left)
+            | (Direction::Down, Direction::Right)
+            | (Direction::Right, Direction::Up)
+            | (Direction::Right, Direction::Down) => {self.queued_direction = dir}
+            (_, _) => {self.queued_direction = self.direction;}
+        }
+    }
+
+    pub fn get_head(&self) -> Position {
+        return self.body[0];
+    }
+
+    pub fn tick(&mut self, food_pos: Position) {
+        self.did_eat = false;
+        let (x, y) = (self.body[0].x, self.body[0].y);
+        self.change_direction();
+        let new_head = match &self.direction {
+            Direction::Up => Position { x, y: y-1 },
+            Direction::Left => Position { x: x-1, y },
+            Direction::Down => Position { x, y: y+1 },
+            Direction::Right => Position { x: x+1, y },
+        };
+        self.body.insert(0, new_head);
+
+        if new_head.eq(&food_pos) {
+            self.did_eat = true;
+        } else {
+            self.body.pop();
         }
     }
 }
@@ -73,6 +117,10 @@ impl Game {
         }
     }
 
+    pub fn queue_change_direction(&mut self, dir: Direction) {
+        self.snake.queue_change_direction(dir);
+    }
+
     pub fn place_new_food(&mut self) {
         self.food = Game::get_new_food_pos(self.width, self.height);
     }
@@ -81,48 +129,26 @@ impl Game {
         let mut rng = rand::thread_rng();
 
         Position { 
-            x: rng.gen_range(1..width-1),
-            y: rng.gen_range(1..height-1),
-        }
-    }
-
-    pub fn change_direction(&mut self, dir: Direction) {
-        match (&self.snake.direction, dir) {
-            (Direction::Up, Direction::Left)  
-            | (Direction::Up, Direction::Right) 
-            | (Direction::Left, Direction::Up)
-            | (Direction::Left, Direction::Down)
-            | (Direction::Down, Direction::Left)
-            | (Direction::Down, Direction::Right)
-            | (Direction::Right, Direction::Up)
-            | (Direction::Right, Direction::Down) => {self.snake.direction = dir}
-            (_, _) => {self.snake.direction = self.snake.direction;}
+            x: rng.gen_range(1..=width-2),
+            y: rng.gen_range(1..=height-2),
         }
     }
 
     pub fn tick(&mut self) {
 
-        let (x, y) = (self.snake.body[0].x, self.snake.body[0].y);
-        let new_head = match &self.snake.direction {
-            Direction::Up => Position { x, y: y-1 },
-            Direction::Left => Position { x: x-1, y },
-            Direction::Down => Position { x, y: y+1 },
-            Direction::Right => Position { x: x+1, y },
-        };
-        self.snake.body.insert(0, new_head);
+        self.snake.tick(self.food);
+        let new_head = self.snake.get_head();
 
-        if new_head.eq(&self.food) {
+        if self.snake.did_eat {
             self.score += 1;
             while self.snake.body.contains(&self.food) {
                 self.place_new_food();
             }
-        } else {
-            self.snake.body.pop();
         }
 
         if self.snake.body[1..].contains(&new_head) 
-        || new_head.x < 0 || new_head.x > self.width-1
-        || new_head.y < 0 || new_head.y > self.height-1 {
+        || new_head.x < 1 || new_head.x > self.width-2
+        || new_head.y < 1 || new_head.y > self.height-2 {
             self.lost = true;
             return;
         }

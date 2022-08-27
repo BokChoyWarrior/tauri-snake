@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   document.addEventListener("keydown", async (event: KeyboardEvent) => {
     let direction = event.key.substring(5).toLowerCase();
-    await invoke(`change_dir`, {direction})
+    await invoke(`queue_change_dir`, {direction})
   })
 
   listen("tick", async function tick_update(evt: TauriEvent<any>) {
@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     console.log(game);
     game_grid.style.setProperty(
       "grid-template",
-      `repeat(${game.height}, auto) / repeat(${game.width}, auto)`
+      `repeat(${game.height-2}, auto) / repeat(${game.width-2}, auto)`
     );
     draw_game(game);
   }
@@ -84,8 +84,8 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   function draw_game(game: any) {
     game_grid.innerHTML = "";
-    for (let y = 0; y < game.height; y++) {
-      for (let x = 0; x < game.width; x++) {
+    for (let y = 1; y < game.height-1; y++) {
+      for (let x = 1; x < game.width-1; x++) {
         const div = document.createElement("div");
         div.classList.add("snake-game-cell");
         game_grid.appendChild(div);
