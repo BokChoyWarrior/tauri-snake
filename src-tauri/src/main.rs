@@ -4,13 +4,13 @@
 )]
 mod snake;
 
-use snake::{Game, Position};
-use std::ptr::null;
-use std::sync::mpsc::Receiver;
-use std::sync::{Arc, Mutex, mpsc};
-use std::thread;
+use snake::{Game};
+
+
+use std::sync::{Arc, Mutex};
+
 use std::time::Duration;
-use tauri::{window, AppHandle, Event, Manager, State};
+use tauri::{Manager, State};
 use tokio::time::sleep;
 
 use crate::snake::Direction;
@@ -39,8 +39,7 @@ fn main() {
 			}
 			Ok(())
 		})
-		.on_page_load(|window, _| {
-			let window_ = window.clone();
+		.on_page_load(|_, _| {
 			println!("page loaded");
 		})
 		.manage(SafeGame::default())
@@ -55,7 +54,7 @@ fn dom_loaded() {
 }
 
 #[tauri::command]
-async fn start_game(window: tauri::Window, safe_game: State<'_, SafeGame>) -> Result<Game, ()> {
+async fn start_game(safe_game: State<'_, SafeGame>) -> Result<Game, ()> {
 	println!("starting game");
 	let mut game_mut = safe_game.0.lock().unwrap();
 	*game_mut = Game::new(30, 30);

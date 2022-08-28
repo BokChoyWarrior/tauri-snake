@@ -73,7 +73,7 @@ impl Snake {
     }
 
     pub fn get_head(&self) -> Position {
-        return self.body[0];
+        self.body[0]
     }
 
     pub fn tick(&mut self, food_pos: Position) {
@@ -108,8 +108,8 @@ pub enum Direction {
 impl Game {
     pub fn new(width: usize, height: usize) -> Self {
         Self {
-            width: width,
-            height: height,
+            width,
+            height,
             food: Game::get_new_food_pos(width, height),
             snake: Snake::new(4, Position{x: width/2, y: height/2 }),
             score: 0,
@@ -150,7 +150,7 @@ impl Game {
         || new_head.x < 1 || new_head.x > self.width-2
         || new_head.y < 1 || new_head.y > self.height-2 {
             self.lost = true;
-            return;
+            
         }
     }
 
