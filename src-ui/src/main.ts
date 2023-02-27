@@ -1,16 +1,15 @@
 import { invoke } from "@tauri-apps/api";
-import { Event as TauriEvent, listen, emit } from "@tauri-apps/api/event";
+import { Event as TauriEvent, listen } from "@tauri-apps/api/event";
 const $ = document.querySelector.bind(document);
 
 document.addEventListener("DOMContentLoaded", async function () {
-  const loaded = (await invoke("dom_loaded")) as string;
-
-  // get the elements
+  await invoke("dom_loaded");
+// get the elements
   const pingEl = $("backend-ping") as HTMLElement;
 
   let pingDebounce = 0;
   // listen backend-ping event
-  listen("backend-ping", function (evt: TauriEvent<any>) {
+  await listen("backend-ping", function () {
     pingDebounce += 1;
     if (!pingEl.classList.contains("on")) {
       pingEl.classList.add("on");
@@ -36,7 +35,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     modal.classList.add("hidden");
     await start_game(game_grid);
 
-    start_game_loop();
+    await start_game_loop();
   };
 
   start_button.addEventListener("click", () => startGameListener(start_modal));
@@ -47,12 +46,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     await invoke(`queue_change_dir`, {direction})
   })
 
-  listen("tick", async function tick_update(evt: TauriEvent<any>) {
+  await listen("tick", async function tick_update(evt: TauriEvent<any>) {
     console.log("tick");
     draw_game(evt.payload);
   });
 
-  listen("lost", async function lose_game(evt: TauriEvent<any>) {
+  await listen("lost", async function lose_game() {
     console.log("lost");
     clear_board();
     game_over_modal.classList.remove("hidden");
